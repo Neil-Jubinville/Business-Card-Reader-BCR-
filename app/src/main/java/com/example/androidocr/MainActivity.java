@@ -7,7 +7,9 @@ import android.graphics.BitmapFactory;
 import android.provider.ContactsContract;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -37,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     TextView displayName;
     TextView openContacts;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,9 +53,16 @@ public class MainActivity extends AppCompatActivity {
         displayPhone = (TextView) findViewById(R.id.textView4);
         displayEmail = (TextView) findViewById(R.id.textView3);
 
+        Button cameraButton = (Button)findViewById(R.id.btnTakePic);
+        cameraButton.setOnClickListener( new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                launchCamera();
+            }
+        });
 
         //init image
-        image = BitmapFactory.decodeResource(getResources(), R.drawable.test_image3);
+        image = BitmapFactory.decodeResource(getResources(), R.drawable.test_image2);
 
         //initialize Tesseract API
         String language = "eng";
@@ -71,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
+
         //Add the extracted info from Business Card to the phone's contacts...
         openContacts.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -78,7 +90,42 @@ public class MainActivity extends AppCompatActivity {
                 addToContacts();
             }
         });
+
+        // create an Image Cache for future use;
+        new ImageCache();
+
+
     }
+
+    public void launchCamera(){
+
+        Toast toast = Toast.makeText(this.getApplicationContext(), "Launching Camera" , Toast.LENGTH_SHORT);
+        toast.show();
+
+        Intent intent = new Intent(this.getApplicationContext(), CameraActivity.class);
+        startActivity(intent);
+
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
+        // put your code here...
+
+        Log.d("CAM", "Load the last picture");
+
+        // after saving the file we want to set the image of the OCR target
+
+        if (ImageCache.getInstance().getCacheSize() > 0) {
+            ImageView ocrTarget = (ImageView) findViewById(R.id.imageView);
+            ocrTarget.setImageBitmap(ImageCache.getInstance().getLatestImageBitmap());
+            ocrTarget.invalidate();
+            image = ImageCache.getInstance().getLatestImageBitmap();
+        }
+
+    }
+
+
 
     public void processImage(){
         String OCRresult = null;
